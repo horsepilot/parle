@@ -20,4 +20,4 @@ fi
 source venv/bin/activate
 
 # Run the chatbot script
-python3 chatbot.py
+python3 demo.py
