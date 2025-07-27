@@ -1,5 +1,5 @@
 import google.generativeai as genai
-
+#pip install google-generativeai
 # Replace with your actual API key
 genai.configure(api_key="AIzaSyBWu7cTNXhQreg2hAPyoRd2QA_1r2UOJEk")
 
