@@ -10,8 +10,8 @@
 # WHAT IT DOES:
 #   - Ensures Python 3 is installed
 #   - Installs python3-venv if missing
-#   - Creates a virtual environment to avoid permission/PEP issues
-#   - Installs the Google GenerativeAI SDK
+#   - Creates a virtual environment
+#   - Installs the Google GenerativeAI SDK inside the venv
 ################################################################################
 
 set -e  # Stop if any error occurs
@@ -35,14 +35,16 @@ if [ ! -d "venv" ]; then
     python3 -m venv venv
 fi
 
-# ✅ Activate virtual environment
-source venv/bin/activate
-
-# ✅ Upgrade pip
-pip install --upgrade pip
-
-# ✅ Install Gemini SDK
-pip install google-generativeai
+# ✅ Install packages inside venv without activating shell
+echo "📦 Installing dependencies ..."
+venv/bin/pip install --upgrade pip
+venv/bin/pip install google-generativeai python-dotenv
 
 echo ""
-echo "✅ All set! Now run the chatbot using: ./run.sh"
+echo "✅ Setup complete!"
+echo ""
+echo "💡 To start using the chatbot:"
+echo "   1. Activate the virtual environment:"
+echo "      source venv/bin/activate"
+echo "   2. Run the chatbot:"
+echo "      ./run.sh"
