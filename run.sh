@@ -1,23 +1,25 @@
 #!/bin/bash
 
-# 📜 RUN.SH – Start Gemini Terminal Chatbot
+################################################################################
+# ▶️ RUN.SH – Launch the Gemini Terminal Chatbot
 #
-# USAGE:
-#   Just run this file after you've completed setup.sh:
-#     ./run.sh
+# HOW TO USE:
+#   1. Run setup.sh first
+#   2. Then just run: ./run.sh
 #
 # This will:
-#   ✅ Activate the virtual environment
-#   ✅ Run chatbot.py in the same terminal
+#   - Activate the virtual environment
+#   - Start the chatbot loop
+################################################################################
 
-# Check if venv folder exists
+# ✅ Check if virtual environment exists
 if [ ! -d "venv" ]; then
-    echo "❌ Virtual environment not found. Please run ./setup.sh first."
+    echo "❌ venv not found. Please run ./setup.sh first."
     exit 1
 fi
 
-# Activate the virtual environment
+# ✅ Activate virtual environment
 source venv/bin/activate
 
-# Run the chatbot script
+# ✅ Run the chatbot
 python3 demo.py
