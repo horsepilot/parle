@@ -8,14 +8,15 @@
 # You can exit by typing: exit or quit
 ################################################################################
 
-from google.generativeai import genai
+import google.generativeai as genai  # ✅ Correct import
 
 # 🔑 Replace with your actual API key
-genai.configure(api_key="AIzaSyBWu7cTNXhQreg2hAPyoRd2QA_1r2UOJEk")
+genai.configure(api_key="AIzaSyBWu7cTNXhQreg2hAPyoRd2QA_1r2UOJEk")  # 👈 Replace this with your key
 
 # Load the Gemini model
 model = genai.GenerativeModel("gemini-pro")
 
+# Start a chat session
 chat = model.start_chat()
 
 # 🧠 Chat loop
@@ -28,6 +29,9 @@ while True:
         print("Gemini:", response.text)
     except Exception as e:
         print("⚠️ Error:", e)
+
+
+
 
 
 
