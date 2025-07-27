@@ -1,0 +1,55 @@
+# =====================================
+# 🔐 AWS IAM DEMO (GUI-Based Steps)
+# =====================================
+
+# 1️⃣ Create IAM Group
+# Go to: IAM > User groups > Create group
+# → Group name: DevelopersGroup
+# → Skip policies
+# → Click: Create group
+
+# 2️⃣ Create Custom IAM Policy
+# Go to: IAM > Policies > Create policy
+# → Tab: JSON → Paste:
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "ec2:DescribeInstances"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+# → Next → Name: DevReadOnlyPolicy
+# → Create policy
+
+# 3️⃣ Attach Policy to Group
+# Go to: IAM > User groups > DevelopersGroup
+# → Tab: Permissions → Add permissions
+# → Attach policies directly → Select: DevReadOnlyPolicy
+# → Click: Add permissions
+
+# 4️⃣ Create IAM User
+# Go to: IAM > Users > Add users
+# → Username: DevUser1
+# → Enable console access ✅
+# → Password: StrongPassword123!
+# → Require password reset ✅
+# → Next
+
+# 5️⃣ Add User to Group
+# → Select existing group: DevelopersGroup
+# → Next → Create user
+
+# 6️⃣ (Optional) Create Access Key for CLI/API
+# Go to: IAM > Users > DevUser1 > Security credentials
+# → Section: Access keys → Create access key
+# → Use case: Application outside AWS
+# → Next → Create access key → Copy keys securely
+
+# ✅ DONE: User DevUser1 has access via DevelopersGroup with custom read-only policy.
