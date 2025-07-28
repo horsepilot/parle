@@ -26,7 +26,7 @@ while True:
         break
     try:
         response = chat.send_message(prompt)
-        print("Gemini:", response.text)
+        print("output:", response.text)
     except Exception as e:
         print("⚠️ Error:", e)
 
