@@ -1,0 +1,149 @@
+##########################################################
+✅ FULL LAB: Deploy PHP CRUD App on EC2 + RDS (ALL-IN-ONE)
+##########################################################
+
+▶️ STEP 1: Create MySQL RDS Database
+------------------------------------
+1. AWS Console → RDS → Databases → Create Database
+2. Choose:
+   - Creation Method: Standard Create
+   - Engine: MySQL, Community Edition, 8.0.32
+   - Template: Free Tier
+   - DB Identifier: mydb
+   - Master Username: admin
+   - Password: ********
+3. Connectivity:
+   - Public access: Yes
+   - AZ: No preference
+4. Additional Config → Initial DB Name: mydatabase
+5. Click "Create Database"
+6. After creation → Copy the Endpoint from Connectivity tab
+
+▶️ STEP 2: Setup VPC, Subnet, IGW & Route Table
+------------------------------------------------
+1. VPC → Create VPC → CIDR: 10.0.0.0/16 → Create
+2. Internet Gateway → Create → Attach to your VPC
+3. Subnet → CIDR: 10.0.1.0/24 → Attach to your VPC
+4. Route Table → Create → Edit Routes:
+   - Destination: 0.0.0.0/0 → Target: Your IGW
+   - Associate to your Subnet
+
+▶️ STEP 3: Launch EC2 Ubuntu Instance
+-------------------------------------
+1. EC2 → Launch Instance → Ubuntu 22.04 LTS → t2.micro
+2. Network: Your VPC | Subnet: Your Subnet
+3. Enable Auto-assign Public IP
+4. Security Group Inbound Rules:
+   - SSH (22), HTTP (80), HTTPS (443), MySQL (3306) → Source: Anywhere
+5. Key Pair: Create and download `.pem` → Launch Instance
+6. Copy Public IP of EC2
+
+▶️ STEP 4: Connect to EC2 & Setup LAMP Stack
+---------------------------------------------
+```bash
+chmod 400 your-key.pem
+ssh -i your-key.pem ubuntu@<ec2-public-ip>
+
+# On EC2 Terminal:
+sudo apt-get update -y
+sudo apt-get install apache2 -y
+sudo apt-get install php libapache2-mod-php php-mysql -y
+sudo apt-get install mysql-client -y
+
+mysql -h <rds-endpoint> -u <username> -p
+# Enter password when prompted
+SHOW DATABASES;
+exit;
+
+CREATE TABLE items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    quantity INT NOT NULL
+);
+
+cd /var/www/html
+sudo rm index.html
+sudo nano index.php
+
+<?php
+// DB Credentials
+$host = "your-rds-endpoint";
+$user = "your-username";
+$pass = "your-password";
+$dbname = "your-db-name";
+
+// Connect to RDS
+$conn = new mysqli($host, $user, $pass, $dbname);
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+
+// Add
+if (isset($_POST['add'])) {
+    $name = $_POST['name'];
+    $qty = $_POST['quantity'];
+    $conn->query("INSERT INTO items (name, quantity) VALUES ('$name', '$qty')");
+}
+
+// Update
+if (isset($_POST['update'])) {
+    $id = $_POST['id'];
+    $name = $_POST['name'];
+    $qty = $_POST['quantity'];
+    $conn->query("UPDATE items SET name='$name', quantity='$qty' WHERE id=$id");
+}
+
+// Delete
+if (isset($_GET['delete'])) {
+    $id = $_GET['delete'];
+    $conn->query("DELETE FROM items WHERE id=$id");
+}
+
+// Edit
+$edit = null;
+if (isset($_GET['edit'])) {
+    $id = $_GET['edit'];
+    $res = $conn->query("SELECT * FROM items WHERE id=$id");
+    $edit = $res->fetch_assoc();
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PHP CRUD with RDS</title>
+</head>
+<body>
+<h2><?= $edit ? "Edit Item" : "Add Item" ?></h2>
+<form method="POST">
+    <?php if ($edit): ?>
+        <input type="hidden" name="id" value="<?= $edit['id'] ?>">
+    <?php endif; ?>
+    Name: <input name="name" required value="<?= $edit['name'] ?? '' ?>">
+    Quantity: <input name="quantity" type="number" required value="<?= $edit['quantity'] ?? '' ?>">
+    <button type="submit" name="<?= $edit ? 'update' : 'add' ?>">
+        <?= $edit ? 'Update' : 'Add' ?>
+    </button>
+</form>
+
+<hr>
+<h2>Items List</h2>
+<table border="1" cellpadding="10">
+<tr><th>ID</th><th>Name</th><th>Qty</th><th>Actions</th></tr>
+<?php
+$res = $conn->query("SELECT * FROM items");
+while ($row = $res->fetch_assoc()):
+?>
+<tr>
+    <td><?= $row['id'] ?></td>
+    <td><?= htmlspecialchars($row['name']) ?></td>
+    <td><?= $row['quantity'] ?></td>
+    <td>
+        <a href="?edit=<?= $row['id'] ?>">Edit</a> |
+        <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Delete?')">Delete</a>
+    </td>
+</tr>
+<?php endwhile; ?>
+</table>
+</body>
+</html>
+
+http://<your-ec2-public-ip>
