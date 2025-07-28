@@ -1,0 +1,83 @@
+################################################################################
+# 🚀 VPC SETUP WITH PUBLIC & PRIVATE SUBNETS ON AWS (GUI-BASED) – ALL-IN-ONE
+################################################################################
+
+# 📌 COMPONENTS CREATED:
+# - VPC with CIDR 10.1.0.0/16
+# - Public Subnet (10.1.1.0/24) in AZ-a
+# - Private Subnet (10.1.2.0/24) in AZ-b
+# - Internet Gateway (IGW)
+# - NAT Gateway (for private subnet internet access)
+# - Route Tables (Public & Private)
+# - EC2 Instance in Public Subnet (for SSH)
+################################################################################
+
+# ✅ STEP 1: CREATE VPC
+1. AWS Console → VPC → Your VPCs → Create VPC
+   - Name: MyVPC
+   - IPv4 CIDR: 10.1.0.0/16
+   - Leave others default → Create VPC
+
+# ✅ STEP 2: CREATE SUBNETS
+2. VPC → Subnets → Create Subnet
+   - Name: PublicSubnet
+   - VPC: MyVPC
+   - AZ: Choose any (e.g., ap-south-1a)
+   - CIDR: 10.1.1.0/24 → Create
+3. Repeat for private subnet:
+   - Name: PrivateSubnet
+   - AZ: Different (e.g., ap-south-1b)
+   - CIDR: 10.1.2.0/24 → Create
+
+# ✅ STEP 3: CREATE INTERNET GATEWAY (IGW)
+4. VPC → Internet Gateways → Create IGW
+   - Name: MyIGW → Create
+   - Select IGW → Actions → Attach to VPC → Select MyVPC
+
+# ✅ STEP 4: CREATE PUBLIC ROUTE TABLE
+5. VPC → Route Tables → Create Route Table
+   - Name: PublicRT
+   - VPC: MyVPC → Create
+6. Select PublicRT → Routes → Edit routes
+   - Add Route: Destination: 0.0.0.0/0, Target: MyIGW → Save
+7. Subnet Associations → Edit → Select PublicSubnet → Save
+
+# ✅ STEP 5: ENABLE AUTO-ASSIGN PUBLIC IP
+8. VPC → Subnets → Select PublicSubnet → Actions → Modify auto-assign IP
+   - Enable auto-assign public IPv4 → Save
+
+# ✅ STEP 6: CREATE ELASTIC IP & NAT GATEWAY
+9. EC2 → Elastic IPs → Allocate new address → Allocate
+   - Select EIP → Actions → Associate to NAT Gateway (after step 10)
+10. VPC → NAT Gateway → Create NAT Gateway
+   - Name: MyNAT
+   - Subnet: PublicSubnet
+   - Elastic IP: Select allocated one → Create NAT Gateway
+
+# ✅ STEP 7: CREATE PRIVATE ROUTE TABLE
+11. VPC → Route Tables → Create Route Table
+    - Name: PrivateRT
+    - VPC: MyVPC → Create
+12. Select PrivateRT → Routes → Edit routes
+    - Add Route: Destination: 0.0.0.0/0, Target: NAT Gateway (MyNAT) → Save
+13. Subnet Associations → Edit → Select PrivateSubnet → Save
+
+# ✅ STEP 8: LAUNCH EC2 INSTANCE IN PUBLIC SUBNET
+14. EC2 → Launch Instance
+    - AMI: Amazon Linux 2
+    - Instance Type: t2.micro
+    - Key Pair: Create or Select existing
+    - Network Settings:
+      - VPC: MyVPC
+      - Subnet: PublicSubnet
+      - Auto-assign Public IP: ENABLED
+      - Firewall: Create Security Group:
+         - Inbound Rule: SSH, Port 22, Source: Anywhere (0.0.0.0/0)
+    - Launch Instance
+
+# ✅ STEP 9: SSH INTO INSTANCE
+15. From EC2 → Copy Public IP
+16. Terminal (on your PC):
+```bash
+chmod 400 your-key.pem
+ssh -i your-key.pem ec2-user@<Public-IP>
