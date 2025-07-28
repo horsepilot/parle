@@ -1,0 +1,103 @@
+################################################################################
+# PROGRAM 8: Deploy Java App on EC2 with MySQL RDS Integration
+################################################################################
+
+# 📁 STEP 1: Launch EC2 (Ubuntu) via AWS Console:
+# - AMI: Ubuntu 22.04 (x86_64)
+# - Instance Type: t2.micro (free tier)
+# - Key Pair: practicelabkeypair.pem
+# - Networking: Allow SSH (port 22), MySQL (port 3306)
+# - Auto-assign Public IP: Enabled
+# - Launch instance
+
+# 📶 STEP 2: SSH into EC2
+chmod 400 practicelabkeypair.pem
+ssh -i practicelabkeypair.pem ubuntu@<your-public-ip>
+
+# 🔄 STEP 3: Update and install Java & MySQL client
+sudo apt update
+sudo apt install openjdk-21-jdk mysql-client wget -y
+
+# ✅ STEP 4: Verify Java Installation
+java -version
+
+# 📥 STEP 5: Download MySQL Connector JAR
+cd ~
+wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j-8.3.0.tar.gz
+tar -xzf mysql-connector-j-8.3.0.tar.gz
+
+# 💾 STEP 6: Create Java program file
+nano JdbcCrudDemo.java
+
+
+import java.sql.*;
+
+public class JdbcCrudDemo {
+    static final String JDBC_URL = "jdbc:mysql://<your-rds-endpoint>:3306/javacrud";
+    static final String JDBC_USER = "admin";
+    static final String JDBC_PASS = "yourpassword";
+
+    public static void main(String[] args) {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASS);
+
+            // INSERT
+            String insertSql = "INSERT INTO employees (name, email, country, salary) VALUES (?, ?, ?, ?)";
+            PreparedStatement insertStmt = conn.prepareStatement(insertSql);
+            insertStmt.setString(1, "Alice");
+            insertStmt.setString(2, "alice@example.com");
+            insertStmt.setString(3, "USA");
+            insertStmt.setDouble(4, 50000);
+            insertStmt.executeUpdate();
+            System.out.println("Inserted new employee.");
+
+            // SELECT
+            String selectSql = "SELECT * FROM employees";
+            Statement selectStmt = conn.createStatement();
+            ResultSet rs = selectStmt.executeQuery(selectSql);
+            System.out.println("Employee List:");
+            while (rs.next()) {
+                System.out.println(
+                    rs.getInt("id") + ", " +
+                    rs.getString("name") + ", " +
+                    rs.getString("email") + ", " +
+                    rs.getString("country") + ", " +
+                    rs.getDouble("salary")
+                );
+            }
+
+            // UPDATE
+            String updateSql = "UPDATE employees SET salary = ? WHERE name = ?";
+            PreparedStatement updateStmt = conn.prepareStatement(updateSql);
+            updateStmt.setDouble(1, 60000);
+            updateStmt.setString(2, "Alice");
+            updateStmt.executeUpdate();
+            System.out.println("Updated salary for Alice.");
+
+            // DELETE
+            String deleteSql = "DELETE FROM employees WHERE name = ?";
+            PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+            deleteStmt.setString(1, "Alice");
+            deleteStmt.executeUpdate();
+            System.out.println("Deleted employee Alice.");
+
+            // Cleanup
+            deleteStmt.close();
+            updateStmt.close();
+            rs.close();
+            selectStmt.close();
+            insertStmt.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+# 📦 STEP 7: Compile the Java file
+javac -cp .:/home/ubuntu/mysql-connector-j-8.3.0/mysql-connector-j-8.3.0.jar JdbcCrudDemo.java
+
+# ▶ STEP 8: Run the Java program
+java -cp .:/home/ubuntu/mysql-connector-j-8.3.0/mysql-connector-j-8.3.0.jar JdbcCrudDemo
