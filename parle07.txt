@@ -1,0 +1,48 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MaterialApp(home: ClickCounter()));
+}
+
+class ClickCounter extends StatefulWidget {
+  @override
+  _ClickCounterState createState() => _ClickCounterState();
+}
+
+class _ClickCounterState extends State<ClickCounter> {
+  int count = 0;
+
+  void increase() {
+    setState(() {
+      count++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.lightGreen[100],
+      appBar: AppBar(title: Text('Click Counter')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              color: Colors.lightBlue[100],
+              padding: EdgeInsets.all(20),
+              child: Text('Count: $count', style: TextStyle(fontSize: 24)),
+            ),
+            SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: increase,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple[100],
+              ),
+              child: Text('Click Me', style: TextStyle(fontSize: 18)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

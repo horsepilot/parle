@@ -1,0 +1,60 @@
+import 'package:flutter/material.dart';
+
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(home: GestureDemo());
+  }
+}
+
+class GestureDemo extends StatefulWidget {
+  @override
+  _GestureDemoState createState() => _GestureDemoState();
+}
+
+class _GestureDemoState extends State<GestureDemo> {
+  String action = 'Try a gesture';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Gesture Detector Demo',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          SizedBox(height: 30),
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                setState(() => action = 'Single Tap');
+              },
+              onDoubleTap: () {
+                setState(() => action = 'Double Tap');
+              },
+              onLongPress: () {
+                setState(() => action = 'Long Press');
+              },
+              onHorizontalDragEnd: (details) {
+                setState(() => action = 'Swiped Horizontally');
+              },
+              onVerticalDragEnd: (details) {
+                setState(() => action = 'Swiped Vertically');
+              },
+              child: Container(
+                width: 250,
+                height: 250,
+                color: Colors.red[200],
+                alignment: Alignment.center,
+                child: Text(action, style: TextStyle(fontSize: 20)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

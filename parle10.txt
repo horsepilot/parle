@@ -1,144 +1,53 @@
-################################################################################
-# Program-10: Demonstrate Auto Scaling Group in AWS (Using Load Balancer)
-################################################################################
+import 'package:flutter/material.dart';
 
-Objective:
-Demonstrate how to use Auto Scaling in AWS to manage EC2 instances dynamically
-by setting Min, Max, and Desired instance counts, using a Load Balancer and
-Launch Template.
+void main() => runApp(MyApp());
 
---------------------------------------------------------------------------------
-STEP 1: Create a VPC
---------------------------------------------------------------------------------
-AWS Console → VPC → Your VPCs → Create VPC
-- Name: asg-vpc
-- IPv4 CIDR: 10.0.0.0/16
-- Create
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(home: CounterApp());
+  }
+}
 
---------------------------------------------------------------------------------
-STEP 2: Create Internet Gateway & Attach to VPC
---------------------------------------------------------------------------------
-VPC → Internet Gateways → Create internet gateway
-- Name: asg-igw → Create
-- Select it → Actions → Attach to VPC → Choose asg-vpc
+class CounterApp extends StatefulWidget {
+  @override
+  _CounterAppState createState() => _CounterAppState();
+}
 
---------------------------------------------------------------------------------
-STEP 3: Create Two Public Subnets
---------------------------------------------------------------------------------
-VPC → Subnets → Create subnet
-- VPC: asg-vpc
+class _CounterAppState extends State<CounterApp> {
+  int count = 0;
 
-Subnet 1:
-- Name: public-subnet-1
-- AZ: ap-northeast-1a
-- CIDR: 10.0.1.0/24
-
-Subnet 2:
-- Name: public-subnet-2
-- AZ: ap-northeast-1c
-- CIDR: 10.0.2.0/24
-
---------------------------------------------------------------------------------
-STEP 4: Create Route Table & Enable Internet Access
---------------------------------------------------------------------------------
-VPC → Route Tables → Create route table
-- Name: asg-rt
-- VPC: asg-vpc → Create
-
-- Select route table → Routes → Edit routes
-  - Add: Destination: 0.0.0.0/0 → Target: asg-igw → Save
-
-- Subnet Associations → Edit → Select both public subnets → Save
-
---------------------------------------------------------------------------------
-STEP 5A: Create Target Group
---------------------------------------------------------------------------------
-EC2 → Load Balancing → Target Groups → Create target group
-- Target type: Instance
-- Name: ALB-TargetGroup
-- Protocol: HTTP, Port: 80
-- VPC: asg-vpc
-- Health check path: /
-
-→ Skip registering instances → Create
-
---------------------------------------------------------------------------------
-STEP 5B: Create Launch Template
---------------------------------------------------------------------------------
-EC2 → Launch Templates → Create launch template
-- Name: asg-launch-template
-- AMI: Amazon Linux 2
-- Instance type: t2.micro
-- Key pair: Choose existing key
-
-- Network settings:
-  - Security group with:
-    - HTTP (80) from 0.0.0.0/0
-    - SSH (22) from 0.0.0.0/0 or your IP
-
-- Advanced details → User data:
-  (paste below)
-#!/bin/bash
-yum update -y
-yum install -y httpd
-systemctl start httpd
-systemctl enable httpd
-echo "<h1>Auto Scaling Instance - $(hostname)</h1>" > /var/www/html/index.html
-
-→ Create template
-
---------------------------------------------------------------------------------
-STEP 6: Create Application Load Balancer (ALB)
---------------------------------------------------------------------------------
-EC2 → Load Balancers → Create Load Balancer → Application Load Balancer
-- Name: ALB-Demo
-- Scheme: Internet-facing
-- IP type: IPv4
-- VPC: asg-vpc
-- Subnets: public-subnet-1 and public-subnet-2
-
-- Security group:
-  - Allow HTTP (80) from 0.0.0.0/0
-
-- Listener: HTTP:80 → Forward to ALB-TargetGroup
-
-→ Create
-
-→ Note the DNS name (used to access later):
-http://ALB-Demo-xxxx.ap-northeast-1.elb.amazonaws.com
-
---------------------------------------------------------------------------------
-STEP 7: Create Auto Scaling Group
---------------------------------------------------------------------------------
-EC2 → Auto Scaling Groups → Create Auto Scaling group
-- Name: asg-demo
-- Launch template: asg-launch-template → Latest version
-
-- VPC: asg-vpc
-- Subnets: Select both public subnets
-
-- Attach to existing load balancer:
-  - Application Load Balancer: ALB-Demo
-  - Listener: HTTP:80
-  - Target Group: ALB-TargetGroup
-  - Enable ELB health checks
-
-- Desired Capacity: 2
-- Minimum: 1
-- Maximum: 4
-- Scaling policy: Keep the group at the initial size
-
-→ Create Auto Scaling group
-
---------------------------------------------------------------------------------
-STEP 8: Test Auto Scaling
---------------------------------------------------------------------------------
-1. Open ALB DNS in browser → should show HTML from EC2 instance
-2. Go to Auto Scaling group → Instances
-3. Manually terminate 1 EC2 instance
-4. Wait a few minutes → Auto Scaling will launch a new one automatically
-
---------------------------------------------------------------------------------
-Reference:
-YouTube walkthrough: https://www.youtube.com/watch?v=LrVWHCWnecI
---------------------------------------------------------------------------------
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Center(child: Text('Counter'))),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('$count', style: TextStyle(fontSize: 40)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () => setState(() => count--),
+                  child: Text('Decrement'),
+                ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () => setState(() => count = 0),
+                  child: Text('Reset'),
+                ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () => setState(() => count++),
+                  child: Text('Increment'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

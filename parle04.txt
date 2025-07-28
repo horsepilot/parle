@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Page</title>
+
+    <!-- Correct Manifest Path -->
+    <link rel="manifest" href="manifest.json" />
+  </head>
+
+  <body>
+    <p>Username: <input type="text" name="username" id="username" /></p>
+    <p>Password: <input type="password" name="password" id="password" /></p>
+    <p><input type="submit" value="Check" onclick="verify()" /></p>
+
+    <!-- Correct JS Path -->
+    <script src="app.js">
+// Register the Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service Worker Registered', reg))
+        .catch(err => console.error('Service Worker Registration Failed', err));
+}
+
+// Save credentials to localStorage
+localStorage.setItem("username", "rvce");
+localStorage.setItem("passme1", "rvce");
+
+// Function to verify the credentials
+function verify() {
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+
+    let storedUsername = localStorage.getItem("username");
+    let storedPassword = localStorage.getItem("passme1");
+
+    if (username === storedUsername && password === storedPassword) {
+        alert("Authentication Successful");
+    } else {
+        alert("Authentication Failed");
+    }
+}
+    </script>
+  </body>
+</html>
+
+{
+  "name": "Simple PWA",
+  "short_name": "PWA",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "/serviceWorker2/android-launchericon-48-48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    }
+   
+
+  ]
+}
+
+self.addEventListener('install', event => {
+    console.log('Service Worker Installed');
+    event.waitUntil(
+        caches.open('pwa-cache-v1').then(cache => {
+            return cache.addAll([
+                '/serviceWorker2/index.html',
+                '/serviceWorker2/app.js',
+                '/serviceWorker2/manifest.json',
+                '/serviceWorker2/android-launchericon-48-48.png'
+            ]);
+        })
+    );
+});
+
+self.addEventListener('fetch', event => {
+    console.log('Fetching:', event.request.url);
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request);
+        })
+    );
+});
